@@ -1,0 +1,86 @@
+#include "mpu6050.h"
+
+#include <Wire.h>
+
+
+constexpr uint8_t MPU6050_PWR_MGMT_1 = 0x6B;
+constexpr uint8_t MPU6050_ACCEL_XOUT_H = 0x3B;
+
+
+static int16_t combineBytes(uint8_t highByte,
+                            uint8_t lowByte)
+{
+    return static_cast<int16_t>(
+        (static_cast<uint16_t>(highByte) << 8) |
+        lowByte
+    );
+}
+
+
+bool mpu6050Init()
+{
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+
+    // Wake up MPU6050
+    Wire.beginTransmission(MPU6050_ADDRESS);
+    Wire.write(MPU6050_PWR_MGMT_1);
+    Wire.write(0x00);
+
+    uint8_t error = Wire.endTransmission();
+
+    return error == 0;
+}
+
+
+bool mpu6050ReadRaw(Mpu6050RawData& data)
+{
+    // Tell MPU6050 which register to start reading from
+    Wire.beginTransmission(MPU6050_ADDRESS);
+    Wire.write(MPU6050_ACCEL_XOUT_H);
+
+    // Keep control of the I2C bus for the following read
+    uint8_t error = Wire.endTransmission(false);
+
+    if (error != 0)
+    {
+        return false;
+    }
+
+
+    // Request AX through GZ = 14 bytes
+    uint8_t bytesRequested = 14;
+
+    uint8_t bytesReceived =
+        Wire.requestFrom(
+            MPU6050_ADDRESS,
+            bytesRequested,
+            true
+        );
+
+    if (bytesReceived != bytesRequested)
+    {
+        return false;
+    }
+
+
+    uint8_t buffer[14];
+
+    for (uint8_t i = 0; i < 14; i++)
+    {
+        buffer[i] = Wire.read();
+    }
+
+
+    data.ax = combineBytes(buffer[0], buffer[1]);
+    data.ay = combineBytes(buffer[2], buffer[3]);
+    data.az = combineBytes(buffer[4], buffer[5]);
+
+    data.temperature =
+        combineBytes(buffer[6], buffer[7]);
+
+    data.gx = combineBytes(buffer[8], buffer[9]);
+    data.gy = combineBytes(buffer[10], buffer[11]);
+    data.gz = combineBytes(buffer[12], buffer[13]);
+
+    return true;
+}
