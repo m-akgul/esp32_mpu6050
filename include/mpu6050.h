@@ -39,6 +39,12 @@ struct Mpu6050GyroBias
     float gz;
 };
 
+struct Mpu6050Orientation
+{
+    float roll;
+    float pitch;
+};
+
 
 bool mpu6050Init();
 
@@ -49,5 +55,10 @@ bool mpu6050Read(Mpu6050Data& data);
 bool mpu6050CalibrateGyro(uint16_t sampleCount);
 
 Mpu6050GyroBias mpu6050GetGyroBias();
+
+bool mpu6050GetAccelOrientation(
+    const Mpu6050Data& data,
+    Mpu6050Orientation& orientation
+);
 
 #endif

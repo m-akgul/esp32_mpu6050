@@ -89,6 +89,22 @@ void loop()
             Serial.println(data.gz, 3);
 
             Serial.println();
+
+
+            Mpu6050Orientation orientation;
+
+            mpu6050GetAccelOrientation(
+                data,
+                orientation
+            );
+
+            Serial.print("ROLL/PITCH [deg]: ");
+
+            Serial.print(orientation.roll, 3);
+
+            Serial.print(", ");
+
+            Serial.println(orientation.pitch, 3);
         }
         else
         {

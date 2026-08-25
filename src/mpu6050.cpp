@@ -1,6 +1,7 @@
 #include "mpu6050.h"
 
 #include <Wire.h>
+#include <math.h>
 
 
 constexpr uint8_t MPU6050_PWR_MGMT_1 = 0x6B;
@@ -191,7 +192,31 @@ bool mpu6050CalibrateGyro(uint16_t sampleCount)
     return true;
 }
 
+
 Mpu6050GyroBias mpu6050GetGyroBias()
 {
     return gyroBias;
+}
+
+
+bool mpu6050GetAccelOrientation(
+    const Mpu6050Data& data,
+    Mpu6050Orientation& orientation)
+{
+
+    orientation.roll =
+        atan2f(data.ay, data.az) *
+        RAD_TO_DEG;
+
+    float denominator =
+        sqrtf(
+            data.ay * data.ay +
+            data.az * data.az
+        );
+
+    orientation.pitch =
+        atan2f(-data.ax, denominator) *
+        RAD_TO_DEG;
+
+    return true;
 }
