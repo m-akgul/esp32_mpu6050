@@ -21,9 +21,22 @@ struct Mpu6050RawData
     int16_t gz;
 };
 
+struct Mpu6050Data
+{
+    float ax;
+    float ay;
+    float az;
+
+    float gx;
+    float gy;
+    float gz;
+};
+
 
 bool mpu6050Init();
 
 bool mpu6050ReadRaw(Mpu6050RawData& data);
+
+bool mpu6050Read(Mpu6050Data& data);
 
 #endif

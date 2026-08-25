@@ -6,6 +6,9 @@
 constexpr uint8_t MPU6050_PWR_MGMT_1 = 0x6B;
 constexpr uint8_t MPU6050_ACCEL_XOUT_H = 0x3B;
 
+constexpr float ACCEL_SENSITIVITY = 16384.0f;
+constexpr float GYRO_SENSITIVITY = 131.0f;
+
 
 static int16_t combineBytes(uint8_t highByte,
                             uint8_t lowByte)
@@ -81,6 +84,44 @@ bool mpu6050ReadRaw(Mpu6050RawData& data)
     data.gx = combineBytes(buffer[8], buffer[9]);
     data.gy = combineBytes(buffer[10], buffer[11]);
     data.gz = combineBytes(buffer[12], buffer[13]);
+
+    return true;
+}
+
+
+bool mpu6050Read(Mpu6050Data& data)
+{
+    Mpu6050RawData rawData;
+
+    if (!mpu6050ReadRaw(rawData))
+    {
+        return false;
+    }
+
+    data.ax =
+        static_cast<float>(rawData.ax) /
+        ACCEL_SENSITIVITY;
+
+    data.ay =
+        static_cast<float>(rawData.ay) /
+        ACCEL_SENSITIVITY;
+
+    data.az =
+        static_cast<float>(rawData.az) /
+        ACCEL_SENSITIVITY;
+
+
+    data.gx =
+        static_cast<float>(rawData.gx) /
+        GYRO_SENSITIVITY;
+
+    data.gy =
+        static_cast<float>(rawData.gy) /
+        GYRO_SENSITIVITY;
+
+    data.gz =
+        static_cast<float>(rawData.gz) /
+        GYRO_SENSITIVITY;
 
     return true;
 }

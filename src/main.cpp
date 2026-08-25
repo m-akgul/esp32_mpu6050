@@ -33,30 +33,30 @@ void loop()
     {
         lastReadTime = currentTime;
 
-        Mpu6050RawData data;
+        Mpu6050Data data;
 
-        if (mpu6050ReadRaw(data))
+        if (mpu6050Read(data))
         {
-            Serial.print("ACC: ");
+            Serial.print("ACC [g]: ");
 
-            Serial.print(data.ax);
+            Serial.print(data.ax, 3);
             Serial.print(", ");
 
-            Serial.print(data.ay);
+            Serial.print(data.ay, 3);
             Serial.print(", ");
 
-            Serial.println(data.az);
+            Serial.println(data.az, 3);
 
 
-            Serial.print("GYRO: ");
+            Serial.print("GYRO [deg/s]: ");
 
-            Serial.print(data.gx);
+            Serial.print(data.gx, 3);
             Serial.print(", ");
 
-            Serial.print(data.gy);
+            Serial.print(data.gy, 3);
             Serial.print(", ");
 
-            Serial.println(data.gz);
+            Serial.println(data.gz, 3);
 
             Serial.println();
         }
