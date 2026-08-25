@@ -10,6 +10,14 @@ constexpr float ACCEL_SENSITIVITY = 16384.0f;
 constexpr float GYRO_SENSITIVITY = 131.0f;
 
 
+static Mpu6050GyroBias gyroBias =
+{
+    0.0f,
+    0.0f,
+    0.0f
+};
+
+
 static int16_t combineBytes(uint8_t highByte,
                             uint8_t lowByte)
 {
@@ -113,15 +121,77 @@ bool mpu6050Read(Mpu6050Data& data)
 
     data.gx =
         static_cast<float>(rawData.gx) /
-        GYRO_SENSITIVITY;
+        GYRO_SENSITIVITY -
+        gyroBias.gx;
 
     data.gy =
         static_cast<float>(rawData.gy) /
-        GYRO_SENSITIVITY;
+        GYRO_SENSITIVITY -
+        gyroBias.gy;
 
     data.gz =
         static_cast<float>(rawData.gz) /
-        GYRO_SENSITIVITY;
+        GYRO_SENSITIVITY -
+        gyroBias.gz;
 
     return true;
+}
+
+
+bool mpu6050CalibrateGyro(uint16_t sampleCount)
+{
+    if (sampleCount == 0)
+    {
+        return false;
+    }
+
+    float sumGx = 0.0f;
+    float sumGy = 0.0f;
+    float sumGz = 0.0f;
+
+    uint16_t successfulSamples = 0;
+
+    for (uint16_t i = 0; i < sampleCount; i++)
+    {
+        Mpu6050RawData rawData;
+
+        if (mpu6050ReadRaw(rawData))
+        {
+            float gx =
+                static_cast<float>(rawData.gx) /
+                GYRO_SENSITIVITY;
+
+            float gy =
+                static_cast<float>(rawData.gy) /
+                GYRO_SENSITIVITY;
+
+            float gz =
+                static_cast<float>(rawData.gz) /
+                GYRO_SENSITIVITY;
+
+            sumGx += gx;
+            sumGy += gy;
+            sumGz += gz;
+
+            successfulSamples++;
+        }
+
+        delay(5);
+    }
+
+    if (successfulSamples == 0)
+    {
+        return false;
+    }
+
+    gyroBias.gx = sumGx / successfulSamples;
+    gyroBias.gy = sumGy / successfulSamples;
+    gyroBias.gz = sumGz / successfulSamples;
+
+    return true;
+}
+
+Mpu6050GyroBias mpu6050GetGyroBias()
+{
+    return gyroBias;
 }

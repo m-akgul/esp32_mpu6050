@@ -32,11 +32,22 @@ struct Mpu6050Data
     float gz;
 };
 
+struct Mpu6050GyroBias
+{
+    float gx;
+    float gy;
+    float gz;
+};
+
 
 bool mpu6050Init();
 
 bool mpu6050ReadRaw(Mpu6050RawData& data);
 
 bool mpu6050Read(Mpu6050Data& data);
+
+bool mpu6050CalibrateGyro(uint16_t sampleCount);
+
+Mpu6050GyroBias mpu6050GetGyroBias();
 
 #endif

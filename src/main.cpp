@@ -12,15 +12,45 @@ void setup()
 {
     Serial.begin(115200);
 
-    bool success = mpu6050Init();
-
-    if (success)
+    if (!mpu6050Init())
     {
-        Serial.println("MPU6050 initialized successfully");
+        Serial.println("MPU6050 initialization failed");
+
+        while (true)
+        {
+            delay(1000);
+        }
+    }
+
+    Serial.println("MPU6050 initialized successfully");
+
+    Serial.println("Keep MPU6050 completely still...");
+    Serial.println("Gyroscope calibration starting");
+
+    if (mpu6050CalibrateGyro(500))
+    {
+        Mpu6050GyroBias bias =
+            mpu6050GetGyroBias();
+
+        Serial.println("Calibration complete");
+
+        Serial.print("Gyro bias: ");
+        Serial.print(bias.gx, 3);
+        Serial.print(", ");
+
+        Serial.print(bias.gy, 3);
+        Serial.print(", ");
+
+        Serial.println(bias.gz, 3);
     }
     else
     {
-        Serial.println("MPU6050 initialization failed");
+        Serial.println("Gyroscope calibration failed");
+
+        while (true)
+        {
+            delay(1000);
+        }
     }
 }
 
