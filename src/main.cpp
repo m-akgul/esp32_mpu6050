@@ -5,13 +5,16 @@
 #include "imu_filter.h"
 
 
-uint32_t lastReadTime = 0;
-
-constexpr uint32_t READ_INTERVAL_MS = 100;
+constexpr uint32_t IMU_INTERVAL_MS = 10;
+constexpr uint32_t PRINT_INTERVAL_MS = 100;
 
 ImuFilter imuFilter(2.0f);
 
-uint32_t lastFilterTime = 0;
+uint32_t lastImuTime = 0;
+uint32_t lastPrintTime = 0;
+
+Mpu6050Data data;
+EulerAngles latestAngles;
 
 
 void setup()
@@ -73,8 +76,8 @@ void setup()
         Serial.println("Orientation filter initialized");
     }
 
-    lastReadTime = millis();
-    lastFilterTime = lastReadTime;
+    lastImuTime = millis();
+    lastPrintTime = lastImuTime;
 }
 
 
@@ -82,20 +85,27 @@ void loop()
 {
     uint32_t currentTime = millis();
 
-    if (currentTime - lastReadTime >= READ_INTERVAL_MS)
+    if (currentTime - lastImuTime >= IMU_INTERVAL_MS)
     {
-        float deltaTime = (currentTime - lastFilterTime) / 1000.0f;
+        float deltaTime = (currentTime - lastImuTime) / 1000.0f;
 
-        lastFilterTime = currentTime;
-        lastReadTime = currentTime;
-
-        Mpu6050Data data;
+        lastImuTime = currentTime;
 
         if (mpu6050Read(data))
         {
             imuFilter.update(data, deltaTime);
 
-            EulerAngles angles = imuFilter.getEulerAngles();
+            latestAngles = imuFilter.getEulerAngles();
+        }
+        else
+        {
+            Serial.println("MPU6050 read failed");
+        }
+    }
+
+    if (currentTime - lastPrintTime >= PRINT_INTERVAL_MS)
+        {
+            lastPrintTime = currentTime;
 
             Serial.print("ACC [g]: ");
 
@@ -118,8 +128,6 @@ void loop()
 
             Serial.println(data.gz, 3);
 
-            // Serial.println();
-
 
             Mpu6050Orientation orientation;
 
@@ -141,19 +149,14 @@ void loop()
                 "ROLL/PITCH/YAW [deg]: "
             );
 
-            Serial.print(angles.roll, 3);
+            Serial.print(latestAngles.roll, 3);
             Serial.print(", ");
 
-            Serial.print(angles.pitch, 3);
+            Serial.print(latestAngles.pitch, 3);
             Serial.print(", ");
 
-            Serial.println(angles.yaw, 3);
+            Serial.println(latestAngles.yaw, 3);
 
             Serial.println();
         }
-        else
-        {
-            Serial.println("MPU6050 read failed");
-        }
-    }
 }
