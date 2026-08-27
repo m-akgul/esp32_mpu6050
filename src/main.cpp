@@ -2,14 +2,14 @@
 
 #include "mpu6050.h"
 
-#include "orientation_filter.h"
+#include "imu_filter.h"
 
 
 uint32_t lastReadTime = 0;
 
 constexpr uint32_t READ_INTERVAL_MS = 100;
 
-ComplementaryFilter orientationFilter;
+ImuFilter imuFilter(2.0f);
 
 uint32_t lastFilterTime = 0;
 
@@ -70,15 +70,11 @@ void setup()
             initialOrientation
         );
 
-        orientationFilter.reset(
-            initialOrientation.roll,
-            initialOrientation.pitch
-        );
-
         Serial.println("Orientation filter initialized");
     }
 
-    lastFilterTime = millis();
+    lastReadTime = millis();
+    lastFilterTime = lastReadTime;
 }
 
 
@@ -97,8 +93,9 @@ void loop()
 
         if (mpu6050Read(data))
         {
-            OrientationEstimate orientationEstimate =
-                orientationFilter.update(data, deltaTime);
+            imuFilter.update(data, deltaTime);
+
+            EulerAngles angles = imuFilter.getEulerAngles();
 
             Serial.print("ACC [g]: ");
 
@@ -131,13 +128,26 @@ void loop()
                 orientation
             );
 
-            Serial.print("FILTERED ROLL/PITCH [deg]: ");
+            Serial.print("ROLL/PITCH [deg]: ");
 
             Serial.print(orientation.roll, 3);
 
             Serial.print(", ");
 
             Serial.println(orientation.pitch, 3);
+
+
+            Serial.print(
+                "ROLL/PITCH/YAW [deg]: "
+            );
+
+            Serial.print(angles.roll, 3);
+            Serial.print(", ");
+
+            Serial.print(angles.pitch, 3);
+            Serial.print(", ");
+
+            Serial.println(angles.yaw, 3);
 
             Serial.println();
         }
